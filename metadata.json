@@ -1,0 +1,5 @@
+{
+  "name": "EnHub Web",
+  "description": "A privacy-focused web tool that uses AI to extract English text from images, formats it into a styled HTML reader, and archives it directly to a personal GitHub repository.",
+  "requestFramePermissions": []
+}

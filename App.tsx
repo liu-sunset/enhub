@@ -8,8 +8,19 @@ import { Settings, BookOpen } from 'lucide-react';
 import { Button } from './components/ui/Button';
 
 export default function App() {
-  const { currentStep, config } = useAppStore();
+  const { currentStep, config, articleGroups } = useAppStore();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+
+  // Calculate effective step for the progress indicator based on group status
+  const effectiveStep = React.useMemo(() => {
+    // If we're not in the upload step component, follow the store's currentStep
+    if (currentStep !== 'upload') return currentStep;
+    
+    // In the upload/article-groups component, derive progress from groups
+    if (articleGroups.some(g => g.isSaved)) return 'save';
+    if (articleGroups.some(g => g.status === 'success')) return 'edit';
+    return 'upload';
+  }, [currentStep, articleGroups]);
 
   // Prompt for config on first load if missing keys
   useEffect(() => {
@@ -34,11 +45,11 @@ export default function App() {
           
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2 text-sm text-slate-500">
-               <span className={`px-2 py-1 rounded ${currentStep === 'upload' ? 'bg-slate-100 text-slate-900 font-medium' : ''}`}>1. Upload</span>
+               <span className={`px-2 py-1 rounded ${effectiveStep === 'upload' ? 'bg-slate-100 text-slate-900 font-medium' : ''}`}>1. Upload</span>
                <span>→</span>
-               <span className={`px-2 py-1 rounded ${currentStep === 'edit' ? 'bg-slate-100 text-slate-900 font-medium' : ''}`}>2. Edit</span>
+               <span className={`px-2 py-1 rounded ${effectiveStep === 'edit' ? 'bg-slate-100 text-slate-900 font-medium' : ''}`}>2. Edit</span>
                <span>→</span>
-               <span className={`px-2 py-1 rounded ${currentStep === 'save' ? 'bg-slate-100 text-slate-900 font-medium' : ''}`}>3. Archive</span>
+               <span className={`px-2 py-1 rounded ${effectiveStep === 'save' ? 'bg-slate-100 text-slate-900 font-medium' : ''}`}>3. Archive</span>
             </div>
             <div className="h-6 w-px bg-slate-200 mx-2 hidden md:block"></div>
             <Button variant="ghost" onClick={() => setIsConfigOpen(true)} size="icon">

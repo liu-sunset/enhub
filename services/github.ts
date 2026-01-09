@@ -1,10 +1,20 @@
 export const uploadFileToRepo = async (
   content: string,
-  year: string,
-  articleId: string,
+  yearOrRawPath: string,
+  articleIdOrPath: string,
   config: { token: string; owner: string; repo: string }
 ): Promise<string> => {
-  const path = `en2/${year}/${articleId}.html`;
+  let path = '';
+  let commitMessage = '';
+
+  if (yearOrRawPath === 'raw_path') {
+      path = articleIdOrPath;
+      commitMessage = `Add ${articleIdOrPath} via EnHub`;
+  } else {
+      path = `en2/${yearOrRawPath}/${articleIdOrPath}.html`;
+      commitMessage = `Add article ${articleIdOrPath} (${yearOrRawPath}) via EnHub`;
+  }
+
   const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${path}`;
   const base64Content = btoa(unescape(encodeURIComponent(content))); // robust unicode handling
 
@@ -38,7 +48,7 @@ export const uploadFileToRepo = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      message: `Add article ${articleId} (${year}) via EnHub`,
+      message: commitMessage,
       content: base64Content,
       sha: sha, // Include SHA if we are updating
     }),

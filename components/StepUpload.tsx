@@ -60,6 +60,8 @@ export const StepUpload: React.FC = () => {
     config
   } = useAppStore();
 
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   const handleProcessAll = async () => {
     if (!config.aliyunApiKey) {
         alert("Please configure your Aliyun API Key first.");
@@ -164,6 +166,7 @@ export const StepUpload: React.FC = () => {
             index={index} 
             onRemove={() => removeArticleGroup(group.id)}
             canRemove={articleGroups.length > 1}
+            onPreviewImage={setPreviewImage}
           />
         ))}
       </div>
@@ -185,6 +188,28 @@ export const StepUpload: React.FC = () => {
            {isProcessing ? 'Processing...' : 'Process All Groups'}
         </Button>
       </div>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-200"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center">
+            <img 
+              src={previewImage} 
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button 
+              className="absolute -top-12 right-0 text-white hover:text-slate-300 p-2 transition-colors"
+              onClick={() => setPreviewImage(null)}
+            >
+              <X size={32} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -193,8 +218,9 @@ const GroupCard: React.FC<{
     group: any, 
     index: number, 
     onRemove: () => void,
-    canRemove: boolean
-}> = ({ group, index, onRemove, canRemove }) => {
+    canRemove: boolean,
+    onPreviewImage: (url: string) => void
+}> = ({ group, index, onRemove, canRemove, onPreviewImage }) => {
     const { updateArticleGroup, addImageToGroup, removeImageFromGroup, config } = useAppStore();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -337,11 +363,21 @@ const GroupCard: React.FC<{
                              <label className="block text-sm font-medium text-slate-700 mb-1">Reference Images (Max 3)</label>
                              <div className="grid grid-cols-3 gap-3 mb-3">
                                 {group.images.map((img: any) => (
-                                    <div key={img.id} className="relative aspect-[3/4] bg-slate-100 rounded border border-slate-200 overflow-hidden group/img">
-                                        <img src={img.previewUrl} className="w-full h-full object-cover" />
+                                    <div 
+                                        key={img.id} 
+                                        className="relative aspect-[3/4] bg-slate-100 rounded border border-slate-200 overflow-hidden group/img cursor-pointer"
+                                        onClick={() => onPreviewImage(img.previewUrl)}
+                                    >
+                                        <img src={img.previewUrl} className="w-full h-full object-cover transition-transform group-hover/img:scale-105" />
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                                            <ExternalLink size={20} className="text-white" />
+                                        </div>
                                         <button 
-                                            onClick={() => removeImageFromGroup(group.id, img.id)}
-                                            className="absolute top-1 right-1 bg-white/90 text-red-500 p-1 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeImageFromGroup(group.id, img.id);
+                                            }}
+                                            className="absolute top-1 right-1 bg-white/90 text-red-500 p-1 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity z-10 hover:bg-white"
                                         >
                                             <X size={14} />
                                         </button>
